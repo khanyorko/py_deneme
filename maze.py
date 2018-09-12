@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from random import choice, sample
 from PIL.Image import open
+#
+#
 # for creating a maze with r row and c column 
 # an array[2r-1][2c-1] is needed in order to create walls
 #
@@ -46,7 +48,7 @@ class runner:
         """
         else:
             
-            # to many repeating
+            # too many repeating
             self.go()
             
             pass
@@ -63,7 +65,7 @@ class runner:
         """
         else:
         
-            # to many repeating
+            # too many repeating
             self.go()
             
             pass
