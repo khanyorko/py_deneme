@@ -29,7 +29,7 @@ city_links      =   [
                         [x.get_text(), "https://havadurumu.com.tr/havadurumu/" + x['href'].split('/')[-1]]
                         for x in city_list
                     ]
-#serving 81 cities of Turkey in as a dict.                    
+#serving 81 cities of Turkey as a dict.                    
 city_dict       =   {
                         city[0] : getData(getSoup(city[1]).find('table', class_ = 'days15').find_all('tr')[1:])
                         for city in city_links
