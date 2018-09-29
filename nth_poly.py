@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 def strcat(args):
     ans = ''
     for _ in args:  
-        if _ is args[-1]:                                       # köklerin tekrarlanması durumuna karşı is kullanıldı (!)
+        if _ is args[-1]:                                       # köklerin tekrarlanması durumuna karşı >is< kullanıldı (!)
             ans += _                                            # gönderilen string'lerin aralarına * konur,
             break                                               # eval komutunda kullanılmak üzere birleştirilir
         ans += _ + '*'                                          # son elemana gelindiğinde * konmaz
