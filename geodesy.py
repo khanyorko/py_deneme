@@ -1128,4 +1128,98 @@ def findFunc(params):
     print("You might be looking for...")
     for l in coverage:
         print("\t[{:3.2f}%] {:12s} ".format(l[1]*100, l[0]))
+#2018/11/07
 
+deg2rad = pi / 180.0
+
+def dms2deg(dms):
+    d, m, s = list(map(float, dms.split(' ')))
+    return d + m / 60 + s / 3600
+
+def dms2rad(dms):
+    d, m, s = list(map(float, dms.split(' ')))
+    return deg2rad * (d + m / 60 + s / 3600)
+
+def deg2dms(deg):
+    d = int(deg)
+    m = int((deg - d)*60)
+    s = (deg - d - m/60)*3600
+    return "{:3d} {:2d} {:2.5f}".format(d, m, s)
+
+def rad2dms(rad):
+    deg = rad / deg2rad
+    rad_= deg2dms(deg)
+    return rad_
+def PuissantDIR(S12,a12,lat1,lon1,ell= "GRS80"):
+    ell_   = ellipsoidInstance(ell)
+    M1, N1      = ell_.radiusOfCurvature(float(lat1))[:2]
+    _1_     = S12*cos(a12)/N1
+    _2_     = S12**2*tan(lat1)*sin(a12)**2/(2*N1**2)
+    _3_     = S12**3*cos(a12)*sin(a12)**2*(1+3*tan(lat1)**2)/(6*N1**3)
+    dlat_   = _1_-_2_-_3_
+    _1      = S12*cos(a12)/M1
+    _2      = S12**2*tan(lat1)*sin(a12)**2/(2*M1*N1)
+    _3      = S12**3*cos(a12)*sin(a12)**2*(1+3*tan(lat1)**2)/(6*M1*N1**2)
+    _4      = 1 - 3*ell_.e1**2*sin(lat1)*cos(lat1)*dlat_/(2*(1-ell_.e1**2*sin(lat1)**2))
+    dlat    = (_1-_2-_3)*_4
+    lat2    = lat1+dlat
+    N2      = ell_.radiusOfCurvature(float(lat2))[1]
+    dlon    = S12*sin(a12)*(1-S12**2*(1-sin(a12)**2/cos(lat2)**2)/(6*N2**2))/(cos(lat2)*N2)
+    lon2 = lon1+dlon
+    return rad2dms(lat2), rad2dms(lon2)
+def PuissantINV(lat1,lon1,lat2,lon2,ell= "GRS80"):
+    ell_   = ellipsoidInstance(ell)
+    M1, N1      = ell_.radiusOfCurvature(float(lat1))[:2]
+    N2      = ell_.radiusOfCurvature(float(lat2))[1]
+    dlat, dlon  = lat2-lat1, lon2-lon1
+    mlat        = (lat1+lat2)/2 
+    _1_     = N2*cos(lat2)*dlon
+    _2_     = M1*dlat/(1-3*ell_.e1**2*sin(lat1)*cos(lat1)*dlat/(2*(1-ell_.e1**2*sin(lat1)**2)))
+    a12     = atan(_1_, _2_)
+    X       = sin(mlat)/cos(dlat/2)
+    da      = X*dlon**3*(X-X**3)/12
+    a21     = a12+da+pi/2
+    S12     = N2*cos(lat2)*dlat/sin(a12)
+    for i in range(100):
+        print("a12 :\t{}\na21 :\t{}\nS12 :{} m\n".format(rad2dms(a12), rad2dms(a21), S12))
+        _117_   = N2*cos(lat2)*dlon+S12**3*sin(a12)/(6*N2**2)-S12**3*sin(a12)**3*cos(lat2)**2/(6*N2**2)
+        _116_1  = M1*dlat/(1-3*ell_.e1**2*sin(lat1)*cos(lat1)*dlat/(2*(1-ell_.e1**2*sin(lat1)**2)))
+        _116_2  = S12**2*tan(lat1)*sin(a12)**2/(2*N1)
+        _116_3  = S12**3*cos(a12)*sin(a12)**2*(1+3*tan(lat1)**2)/(6*N1**2)
+        _116_   = _116_1+_116_2+_116_3
+        a12_, a12   = atan(_117_, _116_)-a12, atan(_117_, _116_)
+        da12    = a12-a12_
+        X       = sin(mlat)/cos(dlat/2)
+        da      = X*dlon**3*(X-X**3)/12
+        a21     = a12+da+pi/2
+        S12_, S12   = _117_/sin(a12)-S12, _117_/sin(a12)
+    print("a12 :\t{}\na21 :\t{}\nS12 :{} m\n".format(rad2dms(a12), rad2dms(a21), S12))
+    return rad2dms(a12), rad2dms(a21), S12
+#lat1, lon1 = dms2rad("41 05 54.33"),dms2rad("28 58 10.98")
+#lat2, lon2 = dms2rad("40 29 56.21"), dms2rad("29 17 16.22")
+#a=PuissantINV(lat1,lon1,lat2,lon2,ell="WGS84")
+def gauss_direct(lat,lon,alpha12,s12,ell="GRS80"):
+    ell_   = ellipsoidInstance(ell)
+    M1, N1      = ell_.radiusOfCurvature(lat)[:2]
+    lat2 = lat
+    lon2 = lon
+    alpha2 = alpha12
+    dalpha =0
+    M2 = M1
+    N2 = N1
+    i = 0
+    for i in range(10):
+        alpha_m = alpha12 + (dalpha) / 2
+        Mm = (M1 + M2) / 2
+        dlat = (s12 * cos(alpha_m))/ Mm
+        lat2 =  lat + dlat
+        M2, N2      = ell_.radiusOfCurvature(lat2)[:2]
+        Mm = (M1 + M2) / 2
+        Nm = (N1 + N2) /2
+        lat_m = (lat + lat2)/2
+        dlamda = (s12 * sin(alpha_m)) / (Nm*cos(lat_m))
+        lon2 = lon + dlamda
+        dalpha = dlamda * sin(lat_m)
+        alpha2 = alpha12 + dalpha
+        print(rad2dms(lat2),rad2dms(lon2),alpha2)
+    return lat2, lon2 
