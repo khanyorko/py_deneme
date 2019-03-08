@@ -48,7 +48,7 @@ class angle:
         d = int(deg)
         m = int((deg -d) * 60)
         s = (deg - d - m / 60) * 3600
-        return "{} {} {:7.4f}".format(d,m,s)
+        return "{} {} {}".format(d,m,s)
     
     def dms2deg(self, dms):
         d, m, s = list(map(float, dms.split()))
